@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import io
 import os
+import re
 import time
 import uuid
 from dataclasses import dataclass
@@ -71,12 +72,34 @@ def reset_collection(client: QdrantClient, name: str) -> None:
 
 # ---------- Ingestion ----------
 
+def clean_pdf_text(text: str) -> str:
+    """Repair pypdf output where each visual line ends in a newline.
+
+    pypdf's extract_text() inserts a newline between every text fragment,
+    so PDFs with narrow columns or short lines come out as one-word-per-line.
+    This collapses single newlines into spaces while preserving paragraph
+    breaks (>= 2 newlines) and stitching hyphen-broken words back together.
+    """
+    if not text:
+        return ""
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"-\n(?=\w)", "", text)
+    placeholder = "<<<PARAGRAPH_BREAK>>>"
+    text = re.sub(r"\n{2,}", placeholder, text)
+    text = re.sub(r"\n+", " ", text)
+    text = text.replace(placeholder, "\n\n")
+    text = re.sub(r"[ \t]+", " ", text)
+    text = "\n".join(line.strip() for line in text.split("\n"))
+    return text.strip()
+
+
 def load_pdf(file_bytes: bytes) -> list[tuple[int, str]]:
     """Return list of (page_number, page_text). Page numbers are 1-indexed."""
     reader = PdfReader(io.BytesIO(file_bytes))
     pages: list[tuple[int, str]] = []
     for i, page in enumerate(reader.pages, start=1):
-        text = page.extract_text() or ""
+        raw = page.extract_text() or ""
+        text = clean_pdf_text(raw)
         if text.strip():
             pages.append((i, text))
     return pages
@@ -168,7 +191,6 @@ def index_document(
     ]
 
     ensure_collection(client, collection)
-    # Upload in chunks to avoid huge requests
     batch = 128
     for i in range(0, len(points), batch):
         client.upsert(collection_name=collection, points=points[i:i + batch], wait=True)

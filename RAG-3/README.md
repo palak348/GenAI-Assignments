@@ -10,8 +10,8 @@ A Retrieval-Augmented Generation (RAG) application that lets a user upload a doc
 
 The system implements a complete RAG pipeline:
 
-1. **Ingestion** — text is extracted from the uploaded document.
-2. **Chunking** — text is split into semantically coherent passages.
+1. **Ingestion** — text is extracted from the uploaded document. For PDFs, a normalisation step repairs the per-line newlines that `pypdf` inserts during extraction, re-joins hyphen-broken words across line breaks, and preserves real paragraph boundaries.
+2. **Chunking** — the cleaned text is split into semantically coherent passages.
 3. **Embedding** — each passage is converted to a 768-dimensional vector.
 4. **Storage** — vectors and metadata are upserted into a vector database.
 5. **Retrieval** — at query time, the top-k most similar passages are fetched.
