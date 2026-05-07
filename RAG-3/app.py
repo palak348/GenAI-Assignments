@@ -1,5 +1,5 @@
 """
-Streamlit UI for the NotebookLM-style RAG app.
+Streamlit UI for QueryLeaf — a document-grounded RAG application.
 
 Run locally:
     streamlit run app.py
