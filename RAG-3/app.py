@@ -24,8 +24,8 @@ import rag
 load_dotenv()
 
 st.set_page_config(
-    page_title="DocChat — your own NotebookLM",
-    page_icon="📚",
+    page_title="QueryLeaf — chat with your documents",
+    page_icon="🍃",
     layout="wide",
 )
 
@@ -58,14 +58,14 @@ if "indexed_docs" not in st.session_state:
 
 
 def collection_name() -> str:
-    return f"docchat_{st.session_state.session_id}"
+    return f"queryleaf_{st.session_state.session_id}"
 
 
 # ---------- Sidebar ----------
 
 with st.sidebar:
-    st.title("📚 DocChat")
-    st.caption("Your own Google NotebookLM, free and open.")
+    st.title("🍃 QueryLeaf")
+    st.caption("Chat with your documents. Answers grounded in the source.")
 
     config_ok = bool(GEMINI_API_KEY and QDRANT_URL)
     if not config_ok:

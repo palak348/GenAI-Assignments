@@ -1,8 +1,10 @@
-# DocChat
+# QueryLeaf
 
 > Upload a document. Ask questions. Get answers grounded in the source — never hallucinated.
 
 A production-style Retrieval-Augmented Generation (RAG) application that turns any uploaded document into an interactive, searchable knowledge base. Every answer is constrained to the document's own contents and accompanied by the exact passages used to construct it, with page-level citations.
+
+**🔗 Live demo:** https://queryleaf.streamlit.app
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)
 ![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B.svg)
