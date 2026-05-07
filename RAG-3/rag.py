@@ -73,23 +73,27 @@ def reset_collection(client: QdrantClient, name: str) -> None:
 # ---------- Ingestion ----------
 
 def clean_pdf_text(text: str) -> str:
-    """Repair pypdf output where each visual line ends in a newline.
+    """Flatten pypdf output into clean prose.
 
-    pypdf's extract_text() inserts a newline between every text fragment,
-    so PDFs with narrow columns or short lines come out as one-word-per-line.
-    This collapses single newlines into spaces while preserving paragraph
-    breaks (>= 2 newlines) and stitching hyphen-broken words back together.
+    pypdf's extract_text() is unreliable about whitespace: depending on the
+    PDF's layout (especially code blocks, narrow columns, or non-standard
+    fonts) it can insert one or more newlines between every word, producing
+    one-word-per-line output. Trying to preserve paragraph structure from
+    that signal causes false paragraph breaks.
+
+    Strategy: collapse every run of whitespace (including newlines) into a
+    single space, after first stitching hyphen-broken words across line
+    ends. The downstream RecursiveCharacterTextSplitter then chunks on
+    sentence boundaries (". "), which is a more reliable semantic unit
+    than pypdf's whitespace.
     """
     if not text:
         return ""
     text = text.replace("\r\n", "\n").replace("\r", "\n")
+    # Rejoin hyphen-broken words: "exam-\nple" -> "example".
     text = re.sub(r"-\n(?=\w)", "", text)
-    placeholder = "<<<PARAGRAPH_BREAK>>>"
-    text = re.sub(r"\n{2,}", placeholder, text)
-    text = re.sub(r"\n+", " ", text)
-    text = text.replace(placeholder, "\n\n")
-    text = re.sub(r"[ \t]+", " ", text)
-    text = "\n".join(line.strip() for line in text.split("\n"))
+    # Collapse every run of whitespace (spaces, tabs, newlines) into one space.
+    text = re.sub(r"\s+", " ", text)
     return text.strip()
 
 
